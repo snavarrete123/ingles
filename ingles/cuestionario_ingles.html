@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Personal Information Generator</title>
+  <link rel="stylesheet" href="cuestionario_ingles.css">
+</head>
+<body>
+  <div class="page-backdrop" aria-hidden="true"></div>
+  <main>
+    <header class="page-header">
+      <p class="eyebrow">Universidad Católica de Temuco · English project</p>
+      <h1>Personal Information Generator</h1>
+      <p class="intro">Complete the form to create a clear personal introduction in English.</p>
+    </header>
+
+    <section class="form-progress" aria-label="Form completion">
+      <div class="progress-copy">
+        <span class="progress-icon" aria-hidden="true">✦</span>
+        <div>
+          <strong>Your profile</strong>
+          <span id="progress-count">0 of 12 fields completed</span>
+        </div>
+      </div>
+      <div
+        id="progress-track"
+        class="progress-track"
+        role="progressbar"
+        aria-label="Required fields completed"
+        aria-valuemin="0"
+        aria-valuemax="12"
+        aria-valuenow="0">
+        <span id="progress-fill" class="progress-fill"></span>
+      </div>
+    </section>
+
+    <form id="personal-form">
+      <section class="form-section" aria-labelledby="personal-heading">
+        <h2 id="personal-heading">Personal details</h2>
+        <div class="fields">
+          <div class="field">
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" placeholder="e.g. Martín González" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="age">Age</label>
+            <input id="age" name="age" type="number" placeholder="e.g. 18" min="1" max="120" step="1" required>
+          </div>
+          <div class="field field-wide">
+            <label for="address">Address</label>
+            <input id="address" name="address" type="text" placeholder="e.g. Avenida Providencia 1234" autocomplete="street-address" required>
+          </div>
+          <div class="field">
+            <label for="city">City</label>
+            <input id="city" name="city" type="text" placeholder="e.g. Santiago" autocomplete="address-level2" required>
+          </div>
+          <div class="field">
+            <label for="country">Country</label>
+            <input id="country" name="country" type="text" placeholder="e.g. Chile" autocomplete="country-name" required>
+          </div>
+          <div class="field">
+            <label for="nationality">Nationality</label>
+            <input id="nationality" name="nationality" type="text" placeholder="e.g. Chilean" required>
+          </div>
+          <div class="field">
+            <label for="marital-status">Marital Status</label>
+            <input id="marital-status" name="maritalStatus" type="text" placeholder="e.g. Single" required>
+          </div>
+          <div class="field">
+            <label for="occupation">Occupation</label>
+            <input id="occupation" name="occupation" type="text" placeholder="e.g. Student" required>
+          </div>
+          <div class="field">
+            <label for="workplace">Place of Occupation</label>
+            <input id="workplace" name="workplace" type="text" placeholder="e.g. Liceo de Aplicación" required>
+          </div>
+          <div class="field">
+            <label for="hobby">Hobby</label>
+            <input id="hobby" name="hobby" type="text" placeholder="e.g. playing soccer" required>
+          </div>
+          <div class="field">
+            <label for="favorite-subject">Favorite Subject</label>
+            <input id="favorite-subject" name="favoriteSubject" type="text" placeholder="e.g. English" required>
+          </div>
+          <div class="field field-wide upload-field">
+            <label for="picture">Upload Picture</label>
+            <input id="picture" name="picture" type="file" accept="image/*" required>
+            <img id="picture-preview" alt="Selected profile picture preview" hidden>
+          </div>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button type="reset" class="button-secondary">Clear</button>
+        <button type="submit">Generate</button>
+      </div>
+      <p id="status" role="status" aria-live="polite"></p>
+    </form>
+
+    <section id="result" class="result" aria-labelledby="result-heading" hidden>
+      <div class="result-heading">
+        <div>
+          <p class="eyebrow">Your introduction</p>
+          <h2 id="result-heading">Personal Presentation</h2>
+        </div>
+        <button type="button" id="copy" class="button-secondary">Copy Text</button>
+      </div>
+      <img id="result-picture" alt="Profile picture">
+      <p id="presentation" lang="en"></p>
+    </section>
+    <footer class="photo-credit">
+      Campus Avenida Alemania, Universidad Católica de Temuco · Foto:
+      <a href="https://commons.wikimedia.org/wiki/File:Universidad_Cat%C3%B3lica_de_Temuco,_Campus_Avenida_Alemania.jpg" target="_blank" rel="noopener noreferrer">Malezath</a>
+      · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>
+    </footer>
+  </main>
+
+  <script>
+    const form = document.querySelector("#personal-form");
+    const result = document.querySelector("#result");
+    const status = document.querySelector("#status");
+    const pictureInput = document.querySelector("#picture");
+    const picturePreview = document.querySelector("#picture-preview");
+    const resultPicture = document.querySelector("#result-picture");
+    const requiredFields = [...form.querySelectorAll("[required]")];
+    const progressTrack = document.querySelector("#progress-track");
+    const progressFill = document.querySelector("#progress-fill");
+    const progressCount = document.querySelector("#progress-count");
+    let previewUrl;
+
+    function updateProgress() {
+      const completed = requiredFields.filter(field =>
+        field.type === "file" ? field.files.length > 0 : field.checkValidity()
+      ).length;
+      const percentage = (completed / requiredFields.length) * 100;
+      progressFill.style.width = `${percentage}%`;
+      progressTrack.setAttribute("aria-valuenow", completed);
+      progressCount.textContent = `${completed} of ${requiredFields.length} fields completed`;
+    }
+
+    updateProgress();
+
+    function capitalizeWords(value) {
+      return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("en").replace(/(^|[\s'-])\p{L}/gu, letter => letter.toLocaleUpperCase("en"));
+    }
+
+    form.querySelectorAll('input[type="text"]').forEach(input => {
+      input.setAttribute("autocapitalize", "sentences");
+      input.addEventListener("input", () => {
+        const match = input.value.match(/^(\s*)(\p{L})/u);
+        if (!match) return;
+
+        const uppercaseLetter = match[2].toLocaleUpperCase("en");
+        if (uppercaseLetter === match[2]) return;
+
+        const selectionStart = input.selectionStart;
+        const selectionEnd = input.selectionEnd;
+        const prefix = match[1] + uppercaseLetter;
+        input.value = prefix + input.value.slice(match[0].length);
+        const offset = prefix.length - match[0].length;
+        const adjustPosition = position =>
+          position <= match[1].length ? position :
+            position <= match[0].length ? prefix.length : position + offset;
+        input.setSelectionRange(adjustPosition(selectionStart), adjustPosition(selectionEnd));
+      });
+    });
+
+    pictureInput.addEventListener("change", () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      const picture = pictureInput.files[0];
+      picturePreview.hidden = !picture;
+      if (picture) {
+        previewUrl = URL.createObjectURL(picture);
+        picturePreview.src = previewUrl;
+      } else {
+        picturePreview.removeAttribute("src");
+      }
+      result.hidden = true;
+      status.textContent = "";
+      updateProgress();
+    });
+
+    form.addEventListener("input", () => {
+      result.hidden = true;
+      status.textContent = "";
+      updateProgress();
+    });
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      if (!form.checkValidity()) {
+        status.textContent = "Please complete every field with valid information before generating your presentation.";
+        form.reportValidity();
+        return;
+      }
+
+      const values = Object.fromEntries(new FormData(form).entries());
+      const name = capitalizeWords(values.name);
+      const age = Number(values.age);
+      const address = capitalizeWords(values.address);
+      const city = capitalizeWords(values.city);
+      const country = capitalizeWords(values.country);
+      const nationality = capitalizeWords(values.nationality);
+      const maritalStatus = capitalizeWords(values.maritalStatus);
+      const occupation = capitalizeWords(values.occupation);
+      const workplace = capitalizeWords(values.workplace);
+      const hobby = values.hobby.trim().replace(/\s+/g, " ").toLocaleLowerCase("en");
+      const favoriteSubject = capitalizeWords(values.favoriteSubject);
+      const occupationText = occupation.toLocaleLowerCase("en");
+      const article = /^(honest|honor|honour|hour|heir)/i.test(occupationText) ||
+        (/^[aeiou]/i.test(occupationText) && !/^(one|once|uni([^nmd]|$)|use|ewe|euro)/i.test(occupationText))
+        ? "an"
+        : "a";
+
+      document.querySelector("#presentation").textContent =
+        `Hello! My name is ${name}, and I am ${age} years old. I live at ${address}, in ${city}, ${country}. ` +
+        `I am ${nationality}, and my marital status is ${maritalStatus.toLocaleLowerCase("en")}. ` +
+        `I am ${article} ${occupationText} at ${workplace}. ` +
+        `In my free time, I enjoy ${hobby}. My favorite subject is ${favoriteSubject}.`;
+      resultPicture.src = previewUrl;
+      result.hidden = false;
+      status.textContent = "Your personal presentation has been generated.";
+      result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+
+    form.addEventListener("reset", () => {
+      result.hidden = true;
+      status.textContent = "The form has been cleared.";
+      picturePreview.hidden = true;
+      picturePreview.removeAttribute("src");
+      resultPicture.removeAttribute("src");
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = undefined;
+      }
+      requestAnimationFrame(updateProgress);
+    });
+
+    document.querySelector("#copy").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(document.querySelector("#presentation").textContent);
+        status.textContent = "Your presentation was copied to the clipboard.";
+      } catch (error) {
+        status.textContent = "Unable to copy the text. Please select and copy it manually.";
+      }
+    });
+  </script>
+</body>
+</html>
